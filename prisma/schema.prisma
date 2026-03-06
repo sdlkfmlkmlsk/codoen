@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  password     String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  discordId    String?  // For sending direct messages via Discord bot
+
+  pteroUserId  Int?     @unique
+  servers      ServerMapping[]
+  clientTokens ClientApiToken[]
+  orders       Order[]
+  tickets      Ticket[]
+  alerts       Alert[]
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  price       Float
+  memory      Int      // In MB
+  cpu         Int      // In %
+  disk        Int      // In MB
+  eggId       Int?     // Pterodactyl Egg ID relation
+  nestId      Int?     // Pterodactyl Nest ID relation
+  
+  orders      Order[]
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum OrderType {
+  NEW_SERVER
+  UPGRADE
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  planId        String?  // Optional for custom upgrades
+  plan          Plan?    @relation(fields: [planId], references: [id], onDelete: Cascade)
+  
+  type          OrderType @default(NEW_SERVER)
+  serverId      String?   // UUID of the server for upgrades
+  
+  addMemory     Int?      // MB
+  addCpu        Int?      // %
+  addDisk       Int?      // MB
+  
+  status        OrderStatus @default(PENDING)
+  transactionId String?
+  receiptImage  String?  // Optional URL/Path to uploaded receipt
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+
+
+model ServerMapping {
+  id                   String   @id @default(cuid())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pteroServerNumericId Int
+  pteroServerIdentifier String? 
+  createdAt            DateTime @default(now())
+
+  @@unique([userId, pteroServerNumericId])
+}
+
+model ClientApiToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String
+  createdAt DateTime @default(now())
+
+  @@unique([userId])
+}
+
+enum TicketStatus {
+  OPEN
+  CLOSED
+}
+
+model Ticket {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   String
+  status    TicketStatus    @default(OPEN)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  messages  TicketMessage[]
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId    String     // ID of the user or admin who replied
+  content   String
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+enum AlertType {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+model Alert {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  type      AlertType @default(INFO)
+  isRead    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+}
