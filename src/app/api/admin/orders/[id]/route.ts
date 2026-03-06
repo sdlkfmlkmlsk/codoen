@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const { id: orderId } = params;
+        const { id: orderId } = await params;
         const { status } = await req.json(); // "APPROVED" or "REJECTED"
 
         if (!["APPROVED", "REJECTED"].includes(status)) {
