@@ -45,7 +45,8 @@ export default function AuthPage() {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.error || "Something went wrong");
+                const errorMessage = data.details ? `${data.error}: ${data.details}` : (data.error || "Something went wrong");
+                throw new Error(errorMessage);
             }
 
             if (mode === "login") {
