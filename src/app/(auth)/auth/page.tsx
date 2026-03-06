@@ -103,7 +103,9 @@ export default function AuthPage() {
             {/* Center card */}
             <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-12">
                 <div className="w-full max-w-[420px] rounded-2xl border border-white/10 bg-[#0f1525]/80 p-8 shadow-2xl backdrop-blur-xl">
-                    <h1 className="text-center text-2xl font-bold tracking-tight">Login to Continue</h1>
+                    <h1 className="text-center text-2xl font-bold tracking-tight">
+                        {mode === "login" ? "Login to Continue" : "Register to Continue"}
+                    </h1>
 
                     {/* Mode switch */}
                     <div className="mt-8 grid grid-cols-2 rounded-xl bg-black/40 p-1 border border-white/5">
